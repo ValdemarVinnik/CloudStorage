@@ -9,13 +9,12 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 
-public class CloudStorage extends Application {
+public class CloudStorageStarter extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         URL fxmlLocation = getClass().getResource("/fxml/cloud.fxml");
         FXMLLoader fxmlLoader = new FXMLLoader(fxmlLocation);
         primaryStage.setScene(new Scene((Parent) fxmlLoader.load()));
-       // primaryStage.setScene(new Scene(fxmlLoader.load(),600,400));
         primaryStage.show();
 
         Controller controller = fxmlLoader.getController();

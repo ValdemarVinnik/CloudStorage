@@ -24,6 +24,7 @@ public class ClientHandler implements Runnable {
     public void run() {
 
     try {
+      ous.writeUTF("Open connection...");
 
       while (running) {
         String clientMessage = is.readUTF();
