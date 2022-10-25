@@ -2,16 +2,15 @@ package client;
 
 import javafx.application.Platform;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Client {
     private final int CONNECTION_TIMEOUT = 5;
+    private final byte[] BUFFER = new byte[8119];
     private final Controller controller;
     private Socket socket;
     private DataInputStream is;
@@ -109,8 +108,32 @@ public class Client {
         Platform.runLater(() -> controller.displayUsersListView(file));
     }
 
-    public void downloadFile(File selectedFile) {
-        System.out.println(selectedFile.getName());
-        controller.addMessage(selectedFile.getName());
+    public void unloadFile(File selectedFile) throws IOException {
+
+        writeUTF("#file");
+        writeUTF(selectedFile.getName());
+        writeSize(selectedFile.length());
+
+        try(FileInputStream fis = new FileInputStream(selectedFile)){
+            int read ;
+            while((read = fis.read(BUFFER)) != -1){
+                writeBytes(BUFFER, 0, read);
+            }
+        }
+    }
+
+    private void writeUTF(String message) throws IOException {
+        ous.writeUTF(message);
+        ous.flush();
+    }
+
+    private void writeBytes(byte[] buffer, int off, int length) throws IOException {
+        ous.write(buffer,off,length);
+        ous.flush();
+    }
+
+    private void writeSize(Long size) throws IOException {
+        ous.writeLong(size);
+        ous.flush();
     }
 }

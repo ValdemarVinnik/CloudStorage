@@ -11,6 +11,7 @@ import javafx.scene.control.TextField;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -52,7 +53,8 @@ public class Controller {
     @FXML
     private Button downloadButton;
 
-    private final File CLIENT_ROOT = new File("src/main/java/client/root");
+    private static final File CLIENT_ROOT = new File("src/main/java/client/root");
+    private static String currentPath = CLIENT_ROOT.getAbsolutePath();
     private File selectedFile;
 
 
@@ -81,7 +83,9 @@ public class Controller {
         userViewListField.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2 ){
                 String selectedFileName = userViewListField.getSelectionModel().getSelectedItem();
-                selectedFile = new File(CLIENT_ROOT.getAbsolutePath()+"/"+ selectedFileName);
+                currentPath = currentPath +"/"+  selectedFileName;
+                selectedFile = new File(currentPath);
+                addMessage("Selected "+selectedFile.getName());
                 if (selectedFile.isDirectory()){
                     displayUsersListView(selectedFile.list());
                 }
@@ -99,8 +103,16 @@ public class Controller {
     }
 
     public void downloadFile(ActionEvent actionEvent) {
-        if(selectedFile != null && selectedFile.isFile()){
-            client.downloadFile(selectedFile);
+
+    }
+
+    public void unloadFile(ActionEvent actionEvent) {
+        if(selectedFile != null && !selectedFile.isDirectory()){
+           try{
+               client.unloadFile(selectedFile);
+           }catch(IOException e){
+               e.printStackTrace();
+           }
         }
     }
 }

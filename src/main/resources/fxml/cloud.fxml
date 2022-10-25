@@ -32,7 +32,7 @@
                   <Font name="Courgette Regular" size="18.0" />
                </font>
             </Label>
-            <Button fx:id="unloadButton" layoutX="399.0" layoutY="308.0" mnemonicParsing="false" text="----&gt;">
+            <Button fx:id="unloadButton" onAction="#unloadFile" layoutX="399.0" layoutY="308.0" mnemonicParsing="false" text="----&gt;">
                <font>
                   <Font name="Symbol" size="12.0" />
                </font>
