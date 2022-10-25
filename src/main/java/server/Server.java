@@ -11,12 +11,12 @@ public class Server {
     private DataInputStream is;
     private DataOutputStream ous;
 
-   public void run() throws IOException {
+    public void run() throws IOException {
 
         ServerSocket server = new ServerSocket(8189);
         System.out.println("Server started...");
 
-        while (true){
+        while (true) {
             try {
                 this.socket = server.accept();
                 System.out.println("Server connected with client...");
@@ -25,7 +25,7 @@ public class Server {
                 ous.writeUTF("start");
 
                 new Thread(new ClientHandler(socket)).start();
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
