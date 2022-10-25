@@ -70,23 +70,23 @@ public class Controller {
     }
 
     public void addMessage(String message) {
-            logArea.appendText(message + "\n");
+        logArea.appendText(message + "\n");
 
     }
 
-    public void displayUsersListView(String...files){
+    public void displayUsersListView(String... files) {
         userViewListField.getItems().clear();
         Platform.runLater(() -> userViewListField.getItems().addAll(files));
     }
 
-    public void viewSelectedFile(){
+    public void viewSelectedFile() {
         userViewListField.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 2 ){
+            if (e.getClickCount() == 2) {
                 String selectedFileName = userViewListField.getSelectionModel().getSelectedItem();
-                currentPath = currentPath +"/"+  selectedFileName;
+                currentPath = currentPath + "/" + selectedFileName;
                 selectedFile = new File(currentPath);
-                addMessage("Selected "+selectedFile.getName());
-                if (selectedFile.isDirectory()){
+                addMessage("Selected " + selectedFile.getName());
+                if (selectedFile.isDirectory()) {
                     displayUsersListView(selectedFile.list());
                 }
             }
@@ -107,12 +107,12 @@ public class Controller {
     }
 
     public void unloadFile(ActionEvent actionEvent) {
-        if(selectedFile != null && !selectedFile.isDirectory()){
-           try{
-               client.unloadFile(selectedFile);
-           }catch(IOException e){
-               e.printStackTrace();
-           }
+        if (selectedFile != null && !selectedFile.isDirectory()) {
+            try {
+                client.unloadFile(selectedFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

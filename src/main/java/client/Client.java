@@ -17,7 +17,6 @@ public class Client {
     private DataOutputStream ous;
 
 
-
     public Client(Controller controller) {
         this.controller = controller;
     }
@@ -44,7 +43,7 @@ public class Client {
 
     private void readMessage() throws IOException {
         String message;
-        int count =0;
+        int count = 0;
         try {
             while (true) {
                 message = is.readUTF();
@@ -52,7 +51,7 @@ public class Client {
                 System.out.println("мы здесь" + message);
                 controller.addMessage(message);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -104,7 +103,7 @@ public class Client {
         Runtime.getRuntime().exit(0);
     }
 
-    private void displayFolder(String...file){
+    private void displayFolder(String... file) {
         Platform.runLater(() -> controller.displayUsersListView(file));
     }
 
@@ -114,9 +113,9 @@ public class Client {
         writeUTF(selectedFile.getName());
         writeSize(selectedFile.length());
 
-        try(FileInputStream fis = new FileInputStream(selectedFile)){
-            int read ;
-            while((read = fis.read(BUFFER)) != -1){
+        try (FileInputStream fis = new FileInputStream(selectedFile)) {
+            int read;
+            while ((read = fis.read(BUFFER)) != -1) {
                 writeBytes(BUFFER, 0, read);
             }
         }
@@ -128,7 +127,7 @@ public class Client {
     }
 
     private void writeBytes(byte[] buffer, int off, int length) throws IOException {
-        ous.write(buffer,off,length);
+        ous.write(buffer, off, length);
         ous.flush();
     }
 
