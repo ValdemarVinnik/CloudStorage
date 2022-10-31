@@ -1,5 +1,6 @@
 package client;
 
+import common.Command;
 import javafx.application.Platform;
 
 import java.io.*;
@@ -11,6 +12,12 @@ import java.nio.file.Paths;
 public class Client {
     private final int CONNECTION_TIMEOUT = 5;
     private final byte[] BUFFER = new byte[8119];
+    private static String currentPathOnTheServer = "/???";
+    private static final File CLIENT_ROOT = new File("src/main/java/client/root");
+
+    private static String currentPath = CLIENT_ROOT.getAbsolutePath();
+    private File selectedFile;
+    private String[] contentCurrentDirectory;
     private final Controller controller;
     private Socket socket;
     private DataInputStream is;
@@ -47,8 +54,15 @@ public class Client {
         try {
             while (true) {
                 message = is.readUTF();
-                System.out.println(++count);
-                System.out.println("мы здесь" + message);
+
+                if (message.equals(Command.LOCATION.getCommand())) {
+                    acceptLocation();
+                }
+
+                if (message.equals(Command.DIR_CONTENT.getCommand())){
+                    acceptDirContent();
+                }
+
                 controller.addMessage(message);
             }
         } catch (Exception e) {
@@ -57,11 +71,38 @@ public class Client {
 
     }
 
+    private void acceptDirContent() throws IOException {
+        contentCurrentDirectory = is.readUTF().split("/");
+       controller.displayServerListView(contentCurrentDirectory);// как то криво
+    }
+
+    public String[] getContentCurrentDirectory() {
+        if (contentCurrentDirectory == null) {
+            return new String[]{"???"};
+        }
+        return contentCurrentDirectory;
+    }
+
+    private void acceptLocation() throws IOException {
+        currentPathOnTheServer = is.readUTF();
+
+        controller.displayServerCurrentPath(currentPathOnTheServer);// как то криво
+    }
+
+    public String getCurrentPath() {
+        return currentPath;
+    }
+
+    public String getCurrentPathOnTheServer() {
+        return currentPathOnTheServer;
+    }
+
+
     private boolean waitConnection() throws IOException {
         int count = 0;
         try {
             while (count < CONNECTION_TIMEOUT) {
-                if (is.readUTF().equals("start")) {
+                if (is.readUTF().equals(Command.START.getCommand())) {
                     System.out.println("start");
                     return true;
                 }
@@ -101,10 +142,6 @@ public class Client {
             }
         }
         Runtime.getRuntime().exit(0);
-    }
-
-    private void displayFolder(String... file) {
-        Platform.runLater(() -> controller.displayUsersListView(file));
     }
 
     public void unloadFile(File selectedFile) throws IOException {

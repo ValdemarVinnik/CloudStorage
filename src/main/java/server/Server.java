@@ -1,10 +1,15 @@
 package server;
 
+import common.Command;
+import common.Command.*;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+;
 
 public class Server {
     private Socket socket;
@@ -22,7 +27,8 @@ public class Server {
                 System.out.println("Server connected with client...");
                 is = new DataInputStream(socket.getInputStream());
                 ous = new DataOutputStream(socket.getOutputStream());
-                ous.writeUTF("start");
+
+                ous.writeUTF(Command.START.getCommand());
 
                 new Thread(new ClientHandler(socket)).start();
             } catch (Exception e) {

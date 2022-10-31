@@ -30,7 +30,7 @@ public class Controller {
     private ListView<String> userViewListField;
 
     @FXML
-    private ListView<?> serverViewListField;
+    private ListView<String> serverViewListField;
 
     @FXML
     private TextArea logArea;
@@ -54,6 +54,7 @@ public class Controller {
     private Button downloadButton;
 
     private static final File CLIENT_ROOT = new File("src/main/java/client/root");
+
     private static String currentPath = CLIENT_ROOT.getAbsolutePath();
     private File selectedFile;
 
@@ -61,6 +62,9 @@ public class Controller {
     @FXML
     public void initialize() {
         displayUsersListView(CLIENT_ROOT.list());
+        displayServerListView(client.getContentCurrentDirectory());
+        displayServerCurrentPath(client.getCurrentPathOnTheServer());
+        displayUserCurrentPath(client.getCurrentPath());
         viewSelectedFile();
     }
 
@@ -77,6 +81,21 @@ public class Controller {
     public void displayUsersListView(String... files) {
         userViewListField.getItems().clear();
         Platform.runLater(() -> userViewListField.getItems().addAll(files));
+    }
+
+    public void displayServerListView(String... files) {
+        serverViewListField.getItems().clear();
+        Platform.runLater(() -> serverViewListField.getItems().addAll(files));
+    }
+
+    public void displayUserCurrentPath(String currentPath){
+        userPathField.clear();
+        Platform.runLater(() -> userPathField.appendText(currentPath));
+    }
+
+    public void displayServerCurrentPath(String currentPath){
+        serverPathField.clear();
+        Platform.runLater(() -> serverPathField.appendText(currentPath));
     }
 
     public void viewSelectedFile() {
