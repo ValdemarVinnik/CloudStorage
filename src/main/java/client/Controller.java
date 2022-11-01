@@ -65,7 +65,8 @@ public class Controller {
         displayServerListView(client.getContentCurrentDirectory());
         displayServerCurrentPath(client.getCurrentPathOnTheServer());
         displayUserCurrentPath(client.getCurrentPath());
-        viewSelectedFile();
+        viewSelectedUserFile();
+        viewSelectedServerFile();
     }
 
     public Controller() {
@@ -79,12 +80,12 @@ public class Controller {
     }
 
     public void displayUsersListView(String... files) {
-        userViewListField.getItems().clear();
+         userViewListField.getItems().clear();
         Platform.runLater(() -> userViewListField.getItems().addAll(files));
     }
 
     public void displayServerListView(String... files) {
-        serverViewListField.getItems().clear();
+        Platform.runLater(() -> serverViewListField.getItems().clear());
         Platform.runLater(() -> serverViewListField.getItems().addAll(files));
     }
 
@@ -98,21 +99,34 @@ public class Controller {
         Platform.runLater(() -> serverPathField.appendText(currentPath));
     }
 
-    public void viewSelectedFile() {
+    public void viewSelectedUserFile() {
         userViewListField.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
                 String selectedFileName = userViewListField.getSelectionModel().getSelectedItem();
-                currentPath = currentPath + "/" + selectedFileName;
-                selectedFile = new File(currentPath);
-                addMessage("Selected " + selectedFile.getName());
-                if (selectedFile.isDirectory()) {
-                    displayUsersListView(selectedFile.list());
+                client.GoDown(selectedFileName);
+                client.createSelectedFile();
+                addMessage("Selected " + client.getSelectedFile().getName());
+                if (client.getSelectedFile().isDirectory()) {
+                    displayUsersListView(client.getSelectedFile().list());
                 }
             }
         });
 
     }
 
+    public void viewSelectedServerFile() {
+        serverViewListField.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) {
+                String selectedServerFileName = serverViewListField.getSelectionModel().getSelectedItem();
+                try {
+                    client.goDownServerPath(selectedServerFileName);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+    }
     public void openConnect(ActionEvent actionEvent) {
         try {
             client.openConnection();
@@ -133,5 +147,11 @@ public class Controller {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void userPathRiseUp(ActionEvent actionEvent) {
+        client.riseUp();
+        displayUserCurrentPath(client.getCurrentPath());
+        displayUsersListView(client.getSelectedFile().list());
     }
 }

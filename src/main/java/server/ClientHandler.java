@@ -13,7 +13,7 @@ public class ClientHandler implements Runnable {
     private DataOutputStream ous;
     private final int SIZE = 8192;
     private final byte[] BUFFER = new byte[SIZE];
-    private final String SERVER_ROOT = "src/main/java/server/root/";
+    private final String SERVER_ROOT = "src/main/java/server/root";
     private File currentFile = new File(SERVER_ROOT);
     private String[] currentDirectoryContent;
 
@@ -43,6 +43,13 @@ public class ClientHandler implements Runnable {
                 if (clientMessage.equals("#file")) {
                     readFile();
                 }
+
+                if (clientMessage.equals(Command.DAWN.getCommand())){
+                    goDawn();
+                    sendCurrentLocation();
+                    sendCurrentDirectoryContent();
+                }
+
                 if (clientMessage.equals("end")) {
                     stopHandler();
                     ous.writeUTF("server disconnected.");
@@ -54,6 +61,16 @@ public class ClientHandler implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void goDawn() throws IOException {// выбираем файл
+        String currentFileName = is.readUTF();
+        currentFile = new File(SERVER_ROOT+"/"+currentFileName);
+
+        if (currentFile.isDirectory()){
+            currentDirectoryContent = currentFile.list();
+        }
+
     }
 
     private void sendCurrentDirectoryContent() throws IOException {

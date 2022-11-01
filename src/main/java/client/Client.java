@@ -2,18 +2,20 @@ package client;
 
 import common.Command;
 import javafx.application.Platform;
+import lombok.Data;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+@Data
 public class Client {
     private final int CONNECTION_TIMEOUT = 5;
     private final byte[] BUFFER = new byte[8119];
     private static String currentPathOnTheServer = "/???";
     private static final File CLIENT_ROOT = new File("src/main/java/client/root");
+
 
     private static String currentPath = CLIENT_ROOT.getAbsolutePath();
     private File selectedFile;
@@ -171,5 +173,26 @@ public class Client {
     private void writeSize(Long size) throws IOException {
         ous.writeLong(size);
         ous.flush();
+    }
+
+    public void riseUp() {
+        selectedFile = selectedFile.getParentFile();
+        currentPath = selectedFile.getAbsolutePath();
+    }
+
+    public void GoDown(String selectedFileName) {
+        currentPath = currentPath + "/" +selectedFileName;
+        controller.displayUserCurrentPath(currentPath);
+
+
+    }
+
+    public void createSelectedFile() {
+        selectedFile = new File(currentPath);
+    }
+
+    public void goDownServerPath(String selectedServerFileName) throws IOException {
+        ous.writeUTF(Command.DAWN.getCommand());
+        ous.writeUTF(selectedServerFileName);
     }
 }
