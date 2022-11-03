@@ -3,13 +3,16 @@ package client;
 import common.Command;
 import javafx.application.Platform;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 @Data
+@Slf4j
 public class Client {
     private final int CONNECTION_TIMEOUT = 5;
     private final byte[] BUFFER = new byte[8119];
@@ -61,7 +64,7 @@ public class Client {
                     acceptLocation();
                 }
 
-                if (message.equals(Command.DIR_CONTENT.getCommand())){
+                if (message.equals(Command.DIR_CONTENT.getCommand())) {
                     acceptDirContent();
                 }
 
@@ -75,7 +78,7 @@ public class Client {
 
     private void acceptDirContent() throws IOException {
         contentCurrentDirectory = is.readUTF().split("/");
-       controller.displayServerListView(contentCurrentDirectory);// как то криво
+        controller.displayServerListView(contentCurrentDirectory);// как то криво
     }
 
     public String[] getContentCurrentDirectory() {
@@ -146,16 +149,20 @@ public class Client {
         Runtime.getRuntime().exit(0);
     }
 
-    public void unloadFile(File selectedFile) throws IOException {
 
-        writeUTF("#file");
-        writeUTF(selectedFile.getName());
-        writeSize(selectedFile.length());
+    public void sendSelectedFile() throws IOException {
+        if (selectedFile != null && !selectedFile.isDirectory()) {
 
-        try (FileInputStream fis = new FileInputStream(selectedFile)) {
-            int read;
-            while ((read = fis.read(BUFFER)) != -1) {
-                writeBytes(BUFFER, 0, read);
+            writeUTF(Command.SEND.getCommand());
+            writeUTF(selectedFile.getName());
+            writeSize(selectedFile.length());
+
+            try (FileInputStream fis = new FileInputStream(selectedFile)) {
+                int read;
+                while ((read = fis.read(BUFFER)) != -1) {
+                    writeBytes(BUFFER, 0, read);
+                }
+                log.debug("File %s was unloaded", selectedFile.getName());
             }
         }
     }
@@ -181,10 +188,8 @@ public class Client {
     }
 
     public void GoDown(String selectedFileName) {
-        currentPath = currentPath + "/" +selectedFileName;
+        currentPath = currentPath + "\\" + selectedFileName;
         controller.displayUserCurrentPath(currentPath);
-
-
     }
 
     public void createSelectedFile() {
@@ -194,5 +199,13 @@ public class Client {
     public void goDownServerPath(String selectedServerFileName) throws IOException {
         ous.writeUTF(Command.DAWN.getCommand());
         ous.writeUTF(selectedServerFileName);
+    }
+
+    public void goUpServerPath() {
+        try {
+            ous.writeUTF(Command.UP.getCommand());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

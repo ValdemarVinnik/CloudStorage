@@ -7,6 +7,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.ResourceBundle;
 
+@Slf4j
 public class Controller {
 
     public Button openConnection;
@@ -85,6 +87,7 @@ public class Controller {
     }
 
     public void displayServerListView(String... files) {
+
         Platform.runLater(() -> serverViewListField.getItems().clear());
         Platform.runLater(() -> serverViewListField.getItems().addAll(files));
     }
@@ -95,7 +98,7 @@ public class Controller {
     }
 
     public void displayServerCurrentPath(String currentPath){
-        serverPathField.clear();
+        Platform.runLater(() ->serverPathField.clear());
         Platform.runLater(() -> serverPathField.appendText(currentPath));
     }
 
@@ -140,12 +143,10 @@ public class Controller {
     }
 
     public void unloadFile(ActionEvent actionEvent) {
-        if (selectedFile != null && !selectedFile.isDirectory()) {
-            try {
-                client.unloadFile(selectedFile);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            client.sendSelectedFile();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -153,5 +154,11 @@ public class Controller {
         client.riseUp();
         displayUserCurrentPath(client.getCurrentPath());
         displayUsersListView(client.getSelectedFile().list());
+    }
+
+    public void serverPathRiseUp(ActionEvent actionEvent) throws IOException {
+        client.goUpServerPath();
+        displayServerCurrentPath(client.getCurrentPathOnTheServer());
+        displayServerListView(client.getContentCurrentDirectory());
     }
 }
