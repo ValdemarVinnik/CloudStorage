@@ -1,28 +1,24 @@
 package client;
 
 import common.Command;
-import javafx.application.Platform;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
-@Data
+
 @Slf4j
 public class Client {
     private final int CONNECTION_TIMEOUT = 5;
-    private final byte[] BUFFER = new byte[8119];
-    private static String currentPathOnTheServer = "/???";
+    private final int SIZE = 8192;
+    private final byte[] BUFFER = new byte[SIZE];
+    private static String currentPathOnTheServer = "disconnect";
     private static final File CLIENT_ROOT = new File("src/main/java/client/root");
-
-
+    private File currentUserDirectory;
     private static String currentPath = CLIENT_ROOT.getAbsolutePath();
-    private File selectedFile;
-    private String[] contentCurrentDirectory;
+    private File selectedUserFile;
+    //private String selectedServerFileName;
+    private String[] contentCurrentServersDirectory;
     private final Controller controller;
     private Socket socket;
     private DataInputStream is;
@@ -31,6 +27,7 @@ public class Client {
 
     public Client(Controller controller) {
         this.controller = controller;
+        this.currentUserDirectory = CLIENT_ROOT;
     }
 
     public void openConnection() throws IOException {
@@ -68,6 +65,11 @@ public class Client {
                     acceptDirContent();
                 }
 
+                if (message.equals(Command.SEND.getCommand())){
+                    readFile();
+                    controller.displayUsersListView(currentUserDirectory.list());
+                }
+
                 controller.addMessage(message);
             }
         } catch (Exception e) {
@@ -77,15 +79,15 @@ public class Client {
     }
 
     private void acceptDirContent() throws IOException {
-        contentCurrentDirectory = is.readUTF().split("/");
-        controller.displayServerListView(contentCurrentDirectory);// как то криво
+        contentCurrentServersDirectory = is.readUTF().split("/");
+        controller.displayServerListView(contentCurrentServersDirectory);// как то криво
     }
 
-    public String[] getContentCurrentDirectory() {
-        if (contentCurrentDirectory == null) {
+    public String[] getContentCurrentServersDirectory() {
+        if (contentCurrentServersDirectory == null) {
             return new String[]{"???"};
         }
-        return contentCurrentDirectory;
+        return contentCurrentServersDirectory;
     }
 
     private void acceptLocation() throws IOException {
@@ -96,6 +98,10 @@ public class Client {
 
     public String getCurrentPath() {
         return currentPath;
+    }
+
+    public File getSelectedUserFile(){
+        return selectedUserFile;
     }
 
     public String getCurrentPathOnTheServer() {
@@ -151,21 +157,38 @@ public class Client {
 
 
     public void sendSelectedFile() throws IOException {
-        if (selectedFile != null && !selectedFile.isDirectory()) {
+        if (selectedUserFile != null && !selectedUserFile.isDirectory()) {
 
             writeUTF(Command.SEND.getCommand());
-            writeUTF(selectedFile.getName());
-            writeSize(selectedFile.length());
+            writeUTF(selectedUserFile.getName());
+            writeSize(selectedUserFile.length());
 
-            try (FileInputStream fis = new FileInputStream(selectedFile)) {
+            try (FileInputStream fis = new FileInputStream(selectedUserFile)) {
                 int read;
                 while ((read = fis.read(BUFFER)) != -1) {
                     writeBytes(BUFFER, 0, read);
                 }
-                log.debug("File %s was unloaded", selectedFile.getName());
+                log.debug(String.format("File %s was unloaded", selectedUserFile.getName()));
             }
         }
     }
+
+    private void readFile() throws IOException {
+        log.debug("readFile");
+        String fileName = is.readUTF(); // нужно будет добавить поп-ап окно с предупреждениеи, если такой файл существует
+        File file = new File(currentUserDirectory.getAbsolutePath() + "/" + fileName);
+        long size = is.readLong();
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            for (int i = 0; i < (size + SIZE - 1) / SIZE; i++) {
+
+                int read = is.read(BUFFER);
+                fos.write(BUFFER, 0, read);
+            }
+            ous.writeUTF(fileName + " is unloaded");
+        }
+    }
+
 
     private void writeUTF(String message) throws IOException {
         ous.writeUTF(message);
@@ -183,8 +206,8 @@ public class Client {
     }
 
     public void riseUp() {
-        selectedFile = selectedFile.getParentFile();
-        currentPath = selectedFile.getAbsolutePath();
+        selectedUserFile = selectedUserFile.getParentFile();
+        currentPath = selectedUserFile.getAbsolutePath();
     }
 
     public void GoDown(String selectedFileName) {
@@ -193,19 +216,28 @@ public class Client {
     }
 
     public void createSelectedFile() {
-        selectedFile = new File(currentPath);
+        selectedUserFile = new File(currentPath);
+        if (selectedUserFile.isDirectory()){
+            currentUserDirectory = selectedUserFile;
+        }
     }
 
     public void goDownServerPath(String selectedServerFileName) throws IOException {
-        ous.writeUTF(Command.DAWN.getCommand());
-        ous.writeUTF(selectedServerFileName);
+
+        writeUTF(Command.DAWN.getCommand());
+        writeUTF(selectedServerFileName);
     }
 
     public void goUpServerPath() {
         try {
-            ous.writeUTF(Command.UP.getCommand());
+            writeUTF(Command.UP.getCommand());
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void sendDownloadRequest() throws IOException {
+        writeUTF(Command.DOWNLOAD_REQUEST.getCommand());
+        //ous.writeUTF(selectedServerFileName);
     }
 }

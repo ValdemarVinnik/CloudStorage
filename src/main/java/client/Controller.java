@@ -12,8 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
-import java.util.List;
 import java.util.ResourceBundle;
 
 @Slf4j
@@ -64,7 +62,7 @@ public class Controller {
     @FXML
     public void initialize() {
         displayUsersListView(CLIENT_ROOT.list());
-        displayServerListView(client.getContentCurrentDirectory());
+        displayServerListView(client.getContentCurrentServersDirectory());
         displayServerCurrentPath(client.getCurrentPathOnTheServer());
         displayUserCurrentPath(client.getCurrentPath());
         viewSelectedUserFile();
@@ -82,23 +80,22 @@ public class Controller {
     }
 
     public void displayUsersListView(String... files) {
-         userViewListField.getItems().clear();
+        Platform.runLater(()->  userViewListField.getItems().clear());
         Platform.runLater(() -> userViewListField.getItems().addAll(files));
     }
 
     public void displayServerListView(String... files) {
-
         Platform.runLater(() -> serverViewListField.getItems().clear());
         Platform.runLater(() -> serverViewListField.getItems().addAll(files));
     }
 
-    public void displayUserCurrentPath(String currentPath){
+    public void displayUserCurrentPath(String currentPath) {
         userPathField.clear();
         Platform.runLater(() -> userPathField.appendText(currentPath));
     }
 
-    public void displayServerCurrentPath(String currentPath){
-        Platform.runLater(() ->serverPathField.clear());
+    public void displayServerCurrentPath(String currentPath) {
+        Platform.runLater(() -> serverPathField.clear());
         Platform.runLater(() -> serverPathField.appendText(currentPath));
     }
 
@@ -108,9 +105,9 @@ public class Controller {
                 String selectedFileName = userViewListField.getSelectionModel().getSelectedItem();
                 client.GoDown(selectedFileName);
                 client.createSelectedFile();
-                addMessage("Selected " + client.getSelectedFile().getName());
-                if (client.getSelectedFile().isDirectory()) {
-                    displayUsersListView(client.getSelectedFile().list());
+                addMessage("Selected " + client.getSelectedUserFile().getName());
+                if (client.getSelectedUserFile().isDirectory()) {
+                    displayUsersListView(client.getSelectedUserFile().list());
                 }
             }
         });
@@ -130,6 +127,7 @@ public class Controller {
         });
 
     }
+
     public void openConnect(ActionEvent actionEvent) {
         try {
             client.openConnection();
@@ -139,7 +137,11 @@ public class Controller {
     }
 
     public void downloadFile(ActionEvent actionEvent) {
-
+        try {
+            client.sendDownloadRequest();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void unloadFile(ActionEvent actionEvent) {
@@ -153,12 +155,12 @@ public class Controller {
     public void userPathRiseUp(ActionEvent actionEvent) {
         client.riseUp();
         displayUserCurrentPath(client.getCurrentPath());
-        displayUsersListView(client.getSelectedFile().list());
+        displayUsersListView(client.getSelectedUserFile().list());
     }
 
     public void serverPathRiseUp(ActionEvent actionEvent) throws IOException {
         client.goUpServerPath();
         displayServerCurrentPath(client.getCurrentPathOnTheServer());
-        displayServerListView(client.getContentCurrentDirectory());
+        displayServerListView(client.getContentCurrentServersDirectory());
     }
 }

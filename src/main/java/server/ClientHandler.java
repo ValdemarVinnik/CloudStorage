@@ -44,7 +44,7 @@ public class ClientHandler implements Runnable {
 
             while (running) {
                 String clientMessage = is.readUTF();
-                log.debug("Command is : "+ clientMessage);
+                log.debug("Command is : " + clientMessage);
                 if (clientMessage.equals(Command.SEND.getCommand())) {
                     readFile();
                     updateCurrentDirectory();
@@ -63,6 +63,10 @@ public class ClientHandler implements Runnable {
                     sendCurrentDirectoryContent();
                 }
 
+                if (clientMessage.equals(Command.DOWNLOAD_REQUEST.getCommand())) {
+                    sendFile();
+                }
+
                 if (clientMessage.equals("end")) {
                     stopHandler();
                     ous.writeUTF("server disconnected.");
@@ -74,6 +78,22 @@ public class ClientHandler implements Runnable {
             e.printStackTrace();
         }
     }
+
+    private void writeSize(Long size) throws IOException {
+        ous.writeLong(size);
+        ous.flush();
+    }
+
+    private void writeUTF(String message) throws IOException {
+        ous.writeUTF(message);
+        ous.flush();
+    }
+
+    private void writeBytes(byte[] buffer, int off, int length) throws IOException {
+        ous.write(buffer, off, length);
+        ous.flush();
+    }
+
 
     private void updateCurrentPath() {
         currentPath = currentFile.getAbsolutePath();
@@ -99,7 +119,7 @@ public class ClientHandler implements Runnable {
         log.debug(currentFile.getAbsolutePath());
 
         if (currentFile.isDirectory()) {
-           updateCurrentDirectory();
+            updateCurrentDirectory();
         }
 
     }
@@ -124,7 +144,7 @@ public class ClientHandler implements Runnable {
     private void readFile() throws IOException {
         log.debug("readFile");
         String fileName = is.readUTF();
-        File file = new File(currentDirectory.getAbsolutePath()+"/" + fileName);
+        File file = new File(currentDirectory.getAbsolutePath() + "/" + fileName);
         long size = is.readLong();
 
         try (FileOutputStream fos = new FileOutputStream(file)) {
@@ -134,8 +154,24 @@ public class ClientHandler implements Runnable {
                 fos.write(BUFFER, 0, read);
             }
             ous.writeUTF(fileName + " is unloaded");
+        }
+    }
 
+    private void sendFile() throws IOException {
+        if (currentFile != null && !currentFile.isDirectory()) {
 
+            writeUTF(Command.SEND.getCommand());
+            writeUTF(currentFile.getName());
+            writeSize(currentFile.length());
+
+            try (FileInputStream fis = new FileInputStream(currentFile)) {
+                int read;
+                while ((read = fis.read(BUFFER)) != -1) {
+                    writeBytes(BUFFER, 0, read);
+                }
+                log.debug(String.format("File %s was unloaded", currentFile.getName()));
+            }
         }
     }
 }
+
