@@ -37,10 +37,10 @@
                   <Font name="Symbol" size="12.0" />
                </font>
             </Button>
-            <TextField fx:id="userPathField" layoutX="40.0" layoutY="86.0" prefHeight="25.0" prefWidth="284.0" />
-            <Button fx:id="userRiseUpButton" layoutX="324.0" layoutY="86.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="29.0" text="^" />
-            <Button fx:id="serverRiseUpButton" layoutX="755.0" layoutY="86.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="29.0" text="^" />
-            <TextField fx:id="serverPathField" layoutX="472.0" layoutY="86.0" prefHeight="25.0" prefWidth="284.0" />
+            <TextField fx:id="userPathField" editable="false" layoutX="40.0" layoutY="86.0" prefHeight="25.0" prefWidth="284.0" />
+            <Button fx:id="userRiseUpButton" onAction="#userPathRiseUp" layoutX="324.0" layoutY="86.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="29.0" text="^" />
+            <Button fx:id="serverRiseUpButton" onAction="#serverPathRiseUp" layoutX="755.0" layoutY="86.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="29.0" text="^" />
+            <TextField fx:id="serverPathField" editable="false" layoutX="472.0" layoutY="86.0" prefHeight="25.0" prefWidth="284.0" />
             <Button fx:id="downloadButton" onAction="#downloadFile" layoutX="399.0" layoutY="339.0" mnemonicParsing="false" text="&lt;----">
                <font>
                   <Font name="Symbol" size="12.0" />

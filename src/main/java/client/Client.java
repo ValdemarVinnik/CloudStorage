@@ -1,25 +1,33 @@
 package client;
 
-import javafx.application.Platform;
+import common.Command;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
+
+@Slf4j
 public class Client {
     private final int CONNECTION_TIMEOUT = 5;
-    private final byte[] BUFFER = new byte[8119];
+    private final int SIZE = 8192;
+    private final byte[] BUFFER = new byte[SIZE];
+    private static String currentPathOnTheServer = "disconnect";
+    private static final File CLIENT_ROOT = new File("src/main/java/client/root");
+    private File currentUserDirectory;
+    private static String currentPath = CLIENT_ROOT.getAbsolutePath();
+    private File selectedUserFile;
+    //private String selectedServerFileName;
+    private String[] contentCurrentServersDirectory;
     private final Controller controller;
     private Socket socket;
     private DataInputStream is;
     private DataOutputStream ous;
 
 
-
     public Client(Controller controller) {
         this.controller = controller;
+        this.currentUserDirectory = CLIENT_ROOT;
     }
 
     public void openConnection() throws IOException {
@@ -44,25 +52,68 @@ public class Client {
 
     private void readMessage() throws IOException {
         String message;
-        int count =0;
+        int count = 0;
         try {
             while (true) {
                 message = is.readUTF();
-                System.out.println(++count);
-                System.out.println("мы здесь" + message);
+
+                if (message.equals(Command.LOCATION.getCommand())) {
+                    acceptLocation();
+                }
+
+                if (message.equals(Command.DIR_CONTENT.getCommand())) {
+                    acceptDirContent();
+                }
+
+                if (message.equals(Command.SEND.getCommand())){
+                    readFile();
+                    controller.displayUsersListView(currentUserDirectory.list());
+                }
+
                 controller.addMessage(message);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
 
+    private void acceptDirContent() throws IOException {
+        contentCurrentServersDirectory = is.readUTF().split("/");
+        controller.displayServerListView(contentCurrentServersDirectory);// как то криво
+    }
+
+    public String[] getContentCurrentServersDirectory() {
+        if (contentCurrentServersDirectory == null) {
+            return new String[]{"???"};
+        }
+        return contentCurrentServersDirectory;
+    }
+
+    private void acceptLocation() throws IOException {
+        currentPathOnTheServer = is.readUTF();
+
+        controller.displayServerCurrentPath(currentPathOnTheServer);// как то криво
+    }
+
+    public String getCurrentPath() {
+        return currentPath;
+    }
+
+    public File getSelectedUserFile(){
+        return selectedUserFile;
+    }
+
+    public String getCurrentPathOnTheServer() {
+        return currentPathOnTheServer;
+    }
+
+
     private boolean waitConnection() throws IOException {
         int count = 0;
         try {
             while (count < CONNECTION_TIMEOUT) {
-                if (is.readUTF().equals("start")) {
+                if (is.readUTF().equals(Command.START.getCommand())) {
                     System.out.println("start");
                     return true;
                 }
@@ -104,23 +155,40 @@ public class Client {
         Runtime.getRuntime().exit(0);
     }
 
-    private void displayFolder(String...file){
-        Platform.runLater(() -> controller.displayUsersListView(file));
-    }
 
-    public void unloadFile(File selectedFile) throws IOException {
+    public void sendSelectedFile() throws IOException {
+        if (selectedUserFile != null && !selectedUserFile.isDirectory()) {
 
-        writeUTF("#file");
-        writeUTF(selectedFile.getName());
-        writeSize(selectedFile.length());
+            writeUTF(Command.SEND.getCommand());
+            writeUTF(selectedUserFile.getName());
+            writeSize(selectedUserFile.length());
 
-        try(FileInputStream fis = new FileInputStream(selectedFile)){
-            int read ;
-            while((read = fis.read(BUFFER)) != -1){
-                writeBytes(BUFFER, 0, read);
+            try (FileInputStream fis = new FileInputStream(selectedUserFile)) {
+                int read;
+                while ((read = fis.read(BUFFER)) != -1) {
+                    writeBytes(BUFFER, 0, read);
+                }
+                log.debug(String.format("File %s was unloaded", selectedUserFile.getName()));
             }
         }
     }
+
+    private void readFile() throws IOException {
+        log.debug("readFile");
+        String fileName = is.readUTF(); // нужно будет добавить поп-ап окно с предупреждениеи, если такой файл существует
+        File file = new File(currentUserDirectory.getAbsolutePath() + "/" + fileName);
+        long size = is.readLong();
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            for (int i = 0; i < (size + SIZE - 1) / SIZE; i++) {
+
+                int read = is.read(BUFFER);
+                fos.write(BUFFER, 0, read);
+            }
+            ous.writeUTF(fileName + " is unloaded");
+        }
+    }
+
 
     private void writeUTF(String message) throws IOException {
         ous.writeUTF(message);
@@ -128,12 +196,48 @@ public class Client {
     }
 
     private void writeBytes(byte[] buffer, int off, int length) throws IOException {
-        ous.write(buffer,off,length);
+        ous.write(buffer, off, length);
         ous.flush();
     }
 
     private void writeSize(Long size) throws IOException {
         ous.writeLong(size);
         ous.flush();
+    }
+
+    public void riseUp() {
+        selectedUserFile = selectedUserFile.getParentFile();
+        currentPath = selectedUserFile.getAbsolutePath();
+    }
+
+    public void GoDown(String selectedFileName) {
+        currentPath = currentPath + "\\" + selectedFileName;
+        controller.displayUserCurrentPath(currentPath);
+    }
+
+    public void createSelectedFile() {
+        selectedUserFile = new File(currentPath);
+        if (selectedUserFile.isDirectory()){
+            currentUserDirectory = selectedUserFile;
+        }
+    }
+
+    public void goDownServerPath(String selectedServerFileName) throws IOException {
+
+        writeUTF(Command.DAWN.getCommand());
+        writeUTF(selectedServerFileName);
+    }
+
+    public void goUpServerPath() {
+        try {
+            writeUTF(Command.UP.getCommand());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendDownloadRequest() throws IOException {
+        writeUTF(Command.DOWNLOAD_REQUEST.getCommand());
+        //ous.writeUTF(selectedServerFileName);
     }
 }
