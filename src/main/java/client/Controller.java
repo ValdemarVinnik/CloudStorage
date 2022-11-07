@@ -2,11 +2,10 @@ package client;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -19,6 +18,7 @@ public class Controller {
 
     public Button openConnection;
     private Client client;
+    private ContextMenu menu;
 
     @FXML
     private ResourceBundle resources;
@@ -71,7 +71,28 @@ public class Controller {
 
     public Controller() {
         this.client = new Client(this);
+        createServersContextMenu();
+    }
 
+    private void createServersContextMenu() {
+        MenuItem rename = new MenuItem("rename");
+        rename.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+                log.debug("rename");
+            }
+        });
+
+        MenuItem delete = new MenuItem("delete");
+        delete.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+                log.debug("delete");
+            }
+        });
+        this.menu = new ContextMenu(rename, delete);
     }
 
     public void addMessage(String message) {
@@ -80,7 +101,7 @@ public class Controller {
     }
 
     public void displayUsersListView(String... files) {
-        Platform.runLater(()->  userViewListField.getItems().clear());
+        Platform.runLater(() -> userViewListField.getItems().clear());
         Platform.runLater(() -> userViewListField.getItems().addAll(files));
     }
 
@@ -115,6 +136,7 @@ public class Controller {
     }
 
     public void viewSelectedServerFile() {
+
         serverViewListField.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
                 String selectedServerFileName = serverViewListField.getSelectionModel().getSelectedItem();
@@ -124,6 +146,25 @@ public class Controller {
                     ex.printStackTrace();
                 }
             }
+
+            if (e.getButton() == MouseButton.SECONDARY) {
+
+                if (menu.isShowing()) {
+                    menu.hide();
+                }
+
+
+                double screenX = e.getScreenX();
+                double screenY = e.getScreenY();
+
+                //String text = serverViewListField.getSelectionModel().getSelectedItem();
+
+                if (!serverViewListField.getSelectionModel().isEmpty()) {
+                    menu.show(serverViewListField, screenX, screenY);
+                }
+
+            }
+
         });
 
     }
