@@ -8,6 +8,7 @@ public enum Command {
     DAWN("#dawn"),
     UP("#up"),
     DIR_CONTENT("#dirContent"),
+    RENAME("#rename"),
     LOCATION("#location");
 
     private final String command;

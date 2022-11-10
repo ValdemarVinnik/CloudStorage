@@ -67,6 +67,12 @@ public class ClientHandler implements Runnable {
                     sendFile();
                 }
 
+                if (clientMessage.equals(Command.RENAME.getCommand())){
+                    renameFile();
+                    sendCurrentLocation();
+                    sendCurrentDirectoryContent();
+                }
+
                 if (clientMessage.equals("end")) {
                     stopHandler();
                     ous.writeUTF("server disconnected.");
@@ -77,6 +83,23 @@ public class ClientHandler implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void renameFile() throws IOException {
+
+        String oldFileName = is.readUTF();
+        String newFileName = is.readUTF();
+        log.debug(newFileName);
+
+        File oldFile = new File(currentPath + "/"+ oldFileName);
+        log.debug(oldFileName +" is exist - " + oldFile.exists());
+
+        File newFile = new File(currentPath+ "/" +newFileName);
+        log.debug(newFileName +" is exist - " + newFile.exists());
+
+        boolean successful = oldFile.renameTo(newFile);
+        log.debug("Is rename successful - "+ successful);
+
     }
 
     private void writeSize(Long size) throws IOException {
@@ -114,11 +137,11 @@ public class ClientHandler implements Runnable {
         String currentFileName = is.readUTF();
         log.debug(currentFileName);
         currentFile = new File(currentPath + "/" + currentFileName);
-        updateCurrentPath();
 
         log.debug(currentFile.getAbsolutePath());
 
         if (currentFile.isDirectory()) {
+            updateCurrentPath();
             updateCurrentDirectory();
         }
 

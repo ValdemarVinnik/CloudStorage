@@ -5,7 +5,10 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.MouseButton;
+import javafx.util.StringConverter;
+import javafx.util.converter.DefaultStringConverter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -80,7 +83,23 @@ public class Controller {
 
             @Override
             public void handle(ActionEvent event) {
-                log.debug("rename");
+                String oldFileName = serverViewListField.getSelectionModel().getSelectedItem();
+                serverViewListField.setEditable(true);
+                int selectedIndex = serverViewListField.getSelectionModel().getSelectedIndex();
+
+                serverViewListField.setCellFactory(TextFieldListCell.forListView());
+                serverViewListField.layout();
+                serverViewListField.edit(selectedIndex);
+                serverViewListField.setOnEditCommit(e -> {
+                    if (e.getNewValue().length() != 0) {
+                        serverViewListField.getItems().set(selectedIndex, e.getNewValue());
+                        String newFileName = e.getNewValue();
+                        log.debug("new File name : " + newFileName);
+                        client.renameFileOnServer(oldFileName, newFileName);
+                    }
+                });
+
+
             }
         });
 
@@ -153,18 +172,15 @@ public class Controller {
                     menu.hide();
                 }
 
-
                 double screenX = e.getScreenX();
                 double screenY = e.getScreenY();
 
-                //String text = serverViewListField.getSelectionModel().getSelectedItem();
+                String text = serverViewListField.getSelectionModel().getSelectedItem();
 
-                if (!serverViewListField.getSelectionModel().isEmpty()) {
+                if (text != null) {
                     menu.show(serverViewListField, screenX, screenY);
                 }
-
             }
-
         });
 
     }

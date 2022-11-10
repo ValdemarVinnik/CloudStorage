@@ -13,11 +13,13 @@ public class Client {
     private final int SIZE = 8192;
     private final byte[] BUFFER = new byte[SIZE];
     private static String currentPathOnTheServer = "disconnect";
+
     private static final File CLIENT_ROOT = new File("src/main/java/client/root");
     private File currentUserDirectory;
     private static String currentPath = CLIENT_ROOT.getAbsolutePath();
     private File selectedUserFile;
-    //private String selectedServerFileName;
+
+    private String selectedServerFileName;
     private String[] contentCurrentServersDirectory;
     private final Controller controller;
     private Socket socket;
@@ -29,6 +31,8 @@ public class Client {
         this.controller = controller;
         this.currentUserDirectory = CLIENT_ROOT;
     }
+
+
 
     public void openConnection() throws IOException {
         socket = new Socket("localhost", 8189);
@@ -239,5 +243,15 @@ public class Client {
     public void sendDownloadRequest() throws IOException {
         writeUTF(Command.DOWNLOAD_REQUEST.getCommand());
         //ous.writeUTF(selectedServerFileName);
+    }
+
+    public void renameFileOnServer(String oldFileName, String newFileName) {
+        try {
+            writeUTF(Command.RENAME.getCommand());
+            writeUTF(oldFileName);
+            writeUTF(newFileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
