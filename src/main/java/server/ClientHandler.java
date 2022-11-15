@@ -67,8 +67,25 @@ public class ClientHandler implements Runnable {
                     sendFile();
                 }
 
-                if (clientMessage.equals(Command.RENAME.getCommand())){
+                if (clientMessage.equals(Command.RENAME.getCommand())) {
                     renameFile();
+                    updateCurrentPath();
+                    sendCurrentLocation();
+                    sendCurrentDirectoryContent();
+                }
+
+                if (clientMessage.equals(Command.DELETE.getCommand())) {
+                    deleteFile();
+                    updateCurrentPath();
+                    updateCurrentDirectory();
+                    sendCurrentLocation();
+                    sendCurrentDirectoryContent();
+                }
+
+                if (clientMessage.equals(Command.FOLDER.getCommand())) {
+                    createFolder();
+                    updateCurrentPath();
+                    updateCurrentDirectory();
                     sendCurrentLocation();
                     sendCurrentDirectoryContent();
                 }
@@ -85,21 +102,38 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    private void createFolder() throws IOException {
+        String newFolderName = is.readUTF();
+        File file = new File(currentPath + "/" + newFolderName);
+        file.mkdir();
+        log.debug("file " +newFolderName +" is directory " + file.isDirectory());
+    }
+
+    private void deleteFile() throws IOException {
+        String fileName = is.readUTF();
+        File fileForDelete = new File(currentPath + "/" + fileName);
+        if (!fileForDelete.delete()) {
+            log.debug("File " + fileName + " non deleted");
+        }
+        ;
+    }
+
     private void renameFile() throws IOException {
 
         String oldFileName = is.readUTF();
         String newFileName = is.readUTF();
         log.debug(newFileName);
 
-        File oldFile = new File(currentPath + "/"+ oldFileName);
-        log.debug(oldFileName +" is exist - " + oldFile.exists());
+        File oldFile = new File(currentPath + "/" + oldFileName);
+        log.debug(oldFileName + " is exist - " + oldFile.exists());
 
-        File newFile = new File(currentPath+ "/" +newFileName);
-        log.debug(newFileName +" is exist - " + newFile.exists());
+        File newFile = new File(currentPath + "/" + newFileName);
+        log.debug(newFileName + " is exist - " + newFile.exists());
 
         boolean successful = oldFile.renameTo(newFile);
-        log.debug("Is rename successful - "+ successful);
+        log.debug("Is rename successful - " + successful);
 
+        currentFile = newFile;
     }
 
     private void writeSize(Long size) throws IOException {

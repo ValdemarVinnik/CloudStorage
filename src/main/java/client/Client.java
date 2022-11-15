@@ -33,7 +33,6 @@ public class Client {
     }
 
 
-
     public void openConnection() throws IOException {
         socket = new Socket("localhost", 8189);
         is = new DataInputStream(socket.getInputStream());
@@ -69,7 +68,7 @@ public class Client {
                     acceptDirContent();
                 }
 
-                if (message.equals(Command.SEND.getCommand())){
+                if (message.equals(Command.SEND.getCommand())) {
                     readFile();
                     controller.displayUsersListView(currentUserDirectory.list());
                 }
@@ -104,7 +103,7 @@ public class Client {
         return currentPath;
     }
 
-    public File getSelectedUserFile(){
+    public File getSelectedUserFile() {
         return selectedUserFile;
     }
 
@@ -221,7 +220,7 @@ public class Client {
 
     public void createSelectedFile() {
         selectedUserFile = new File(currentPath);
-        if (selectedUserFile.isDirectory()){
+        if (selectedUserFile.isDirectory()) {
             currentUserDirectory = selectedUserFile;
         }
     }
@@ -242,7 +241,7 @@ public class Client {
 
     public void sendDownloadRequest() throws IOException {
         writeUTF(Command.DOWNLOAD_REQUEST.getCommand());
-        //ous.writeUTF(selectedServerFileName);
+
     }
 
     public void renameFileOnServer(String oldFileName, String newFileName) {
@@ -250,6 +249,24 @@ public class Client {
             writeUTF(Command.RENAME.getCommand());
             writeUTF(oldFileName);
             writeUTF(newFileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteFileOnServer(String fileNameForDelete) {
+        try {
+            writeUTF(Command.DELETE.getCommand());
+            writeUTF(fileNameForDelete);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void createNewFolderOnServer(String folderName) {
+        try {
+            writeUTF(Command.FOLDER.getCommand());
+            writeUTF(folderName);
         } catch (IOException e) {
             e.printStackTrace();
         }

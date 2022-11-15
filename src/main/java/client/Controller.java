@@ -14,7 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class Controller {
@@ -98,7 +102,7 @@ public class Controller {
                         client.renameFileOnServer(oldFileName, newFileName);
                     }
                 });
-
+                serverViewListField.setEditable(false);
 
             }
         });
@@ -108,10 +112,47 @@ public class Controller {
 
             @Override
             public void handle(ActionEvent event) {
+
                 log.debug("delete");
+
+                String selectedItem = serverViewListField.getSelectionModel().getSelectedItem();
+                client.deleteFileOnServer(selectedItem);
             }
         });
-        this.menu = new ContextMenu(rename, delete);
+
+        MenuItem createFolder = new MenuItem("create folder");
+        createFolder.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+
+                log.debug("create folder");
+
+
+                List<String> newContent = Arrays.stream(client.getContentCurrentServersDirectory())
+                        .collect(Collectors.toList());
+                newContent.add(0,"new folder");
+
+                displayServerListView(newContent);
+                serverViewListField.refresh();
+                serverViewListField.setEditable(true);
+                //int selectedIndex = serverViewListField.getItems().size()-1;
+                //log.debug("selected index " + selectedIndex);
+                serverViewListField.setCellFactory(TextFieldListCell.forListView());
+                serverViewListField.layout();
+                serverViewListField.edit(0);
+                serverViewListField.setOnEditCommit(e -> {
+                    if (e.getNewValue().length() != 0) {
+                        serverViewListField.getItems().set(0, e.getNewValue());
+                        String newFolderName = e.getNewValue();
+                        log.debug("new folder name : " + newFolderName);
+                        client.createNewFolderOnServer(newFolderName);
+                    }
+                });
+                serverViewListField.setEditable(false);
+            }
+        });
+        this.menu = new ContextMenu(rename, delete, createFolder);
     }
 
     public void addMessage(String message) {
@@ -125,6 +166,11 @@ public class Controller {
     }
 
     public void displayServerListView(String... files) {
+        Platform.runLater(() -> serverViewListField.getItems().clear());
+        Platform.runLater(() -> serverViewListField.getItems().addAll(files));
+    }
+
+    public void displayServerListView(List<String> files) {
         Platform.runLater(() -> serverViewListField.getItems().clear());
         Platform.runLater(() -> serverViewListField.getItems().addAll(files));
     }

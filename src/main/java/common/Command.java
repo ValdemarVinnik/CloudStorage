@@ -9,6 +9,8 @@ public enum Command {
     UP("#up"),
     DIR_CONTENT("#dirContent"),
     RENAME("#rename"),
+    DELETE("#delete"),
+    FOLDER("#folder"),
     LOCATION("#location");
 
     private final String command;
