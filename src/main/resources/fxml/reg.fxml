@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox prefHeight="277.0" prefWidth="575.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.RegController">
+
+
+    <AnchorPane maxWidth="-1.0" prefHeight="301.0" prefWidth="575.0" style="-fx-background-color: #2E3247;" VBox.vgrow="ALWAYS">
+
+        <Label alignment="CENTER" layoutX="153.0" layoutY="14.0" prefHeight="46.0" prefWidth="251.0" style="&#10;" text="Сloud storage" textAlignment="CENTER" textFill="#e1dada" wrapText="false" AnchorPane.leftAnchor="153.0" AnchorPane.rightAnchor="171.0">
+          <font>
+            <Font name="Elephant Italic" size="31.0" />
+          </font>
+        </Label>
+      <PasswordField fx:id="passwordField" layoutX="181.0" layoutY="139.0" prefHeight="25.0" prefWidth="227.0" promptText="password" />
+      <TextField fx:id="loginField" layoutX="182.0" layoutY="103.0" prefHeight="25.0" prefWidth="227.0" promptText="login" />
+      <Button fx:id="regButton" onAction="#registration" layoutX="253.0" layoutY="189.0" mnemonicParsing="false" text="Registration">
+         <font>
+            <Font name="System Bold Italic" size="12.0" />
+         </font>
+      </Button>
+      <TextField fx:id="nameField" layoutX="182.0" layoutY="68.0" prefHeight="17.0" prefWidth="227.0" promptText="name" />
+
+    </AnchorPane>
+
+</VBox>

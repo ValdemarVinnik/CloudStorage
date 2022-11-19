@@ -2,6 +2,7 @@ package client;
 
 import common.Command;
 import lombok.extern.slf4j.Slf4j;
+import client.controllers.Controller;
 
 import java.io.*;
 import java.net.Socket;
