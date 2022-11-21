@@ -2,6 +2,7 @@ package server;
 
 import common.Command;
 import common.Command.*;
+import server.db.DBConnection;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -29,6 +30,11 @@ public class Server {
                 ous = new DataOutputStream(socket.getOutputStream());
 
                 ous.writeUTF(Command.START.getCommand());
+/**
+ *
+ */
+                DBConnection dbConnection = new DBConnection();
+                dbConnection.getAll();
 
                 new Thread(new ClientHandler(socket)).start();
             } catch (Exception e) {
