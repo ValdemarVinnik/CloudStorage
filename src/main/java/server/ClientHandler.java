@@ -1,15 +1,17 @@
 package server;
 
 import common.*;
+import common.model.User;
 import lombok.extern.slf4j.Slf4j;
+import server.db.DBConnection;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.List;
 
 @Slf4j
 public class ClientHandler implements Runnable {
-
+    private User user;
+    private Socket socket;
     private DataInputStream is;
     private DataOutputStream ous;
     private final int SIZE = 8192;
@@ -22,7 +24,10 @@ public class ClientHandler implements Runnable {
 
     private boolean running = false;
 
-    public ClientHandler(Socket socket) throws IOException {
+    public ClientHandler(Socket socket, User user) throws IOException {
+
+        this.user = user;
+        this.socket = socket;
         running = true;
         is = new DataInputStream(socket.getInputStream());
         ous = new DataOutputStream(socket.getOutputStream());
@@ -74,6 +79,7 @@ public class ClientHandler implements Runnable {
                     sendCurrentDirectoryContent();
                 }
 
+
                 if (clientMessage.equals(Command.DELETE.getCommand())) {
                     deleteFile();
                     updateCurrentPath();
@@ -90,6 +96,7 @@ public class ClientHandler implements Runnable {
                     sendCurrentDirectoryContent();
                 }
 
+
                 if (clientMessage.equals("end")) {
                     stopHandler();
                     ous.writeUTF("server disconnected.");
@@ -98,6 +105,15 @@ public class ClientHandler implements Runnable {
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void registerUser() throws IOException {
+        try {
+            User user = (User)new ObjectInputStream(socket.getInputStream()).readObject();
+
+        }catch (ClassNotFoundException e){
             e.printStackTrace();
         }
     }

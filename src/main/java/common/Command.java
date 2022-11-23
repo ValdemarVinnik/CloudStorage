@@ -11,6 +11,8 @@ public enum Command {
     RENAME("#rename"),
     DELETE("#delete"),
     FOLDER("#folder"),
+    REG("#reg"),
+    AUTH("#auth"),
     LOCATION("#location");
 
     private final String command;

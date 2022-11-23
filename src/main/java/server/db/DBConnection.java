@@ -1,5 +1,7 @@
 package server.db;
 
+import common.Command;
+import common.model.User;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
@@ -49,22 +51,55 @@ public class DBConnection {
         }
     }
 
+    public User getUserByLogin(String login) {
+        String request = Request.selectByLogin(login);
 
-    public void getAll() {
-        String request = Request.selectAll();
         try {
             ResultSet resultSet = getStatement().executeQuery(request);
-            //log.debug(resultSet.getCursorName());
-            //log.debug(String.valueOf(resultSet.findColumn("name")));
             resultSet.next();
-            log.debug( resultSet.getString("password"));
+
+            if (resultSet == null) {
+                return null;
+            }
+            String name = resultSet.getString("name");
+            String password = resultSet.getString("password");
+            String user_folder_path = resultSet.getString("user_folder_path");
+            return new User(name, login, password, user_folder_path);
 
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            closeConnection();
         }
+        return null;
+    }
+
+    public boolean registerUser(User user) {
+        String login = user.getLogin();
+        return (getUserByLogin(login) == null);
+        /**
+         * докрутить создание записи в таблице
+         */
 
     }
 
+
+    public User getUserByLoginAndPassword(String login, String password) {
+        String request = Request.selectByLoginAndPassword(login, password);
+
+        try {
+            ResultSet resultSet = getStatement().executeQuery(request);
+            resultSet.next();
+
+            if (resultSet == null) {
+                return null;
+            }
+            String name = resultSet.getString("name");
+            //String password = resultSet.getString("password");
+            String user_folder_path = resultSet.getString("user_folder_path");
+            return new User(name, login, password, user_folder_path);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

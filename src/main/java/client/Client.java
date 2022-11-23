@@ -1,8 +1,10 @@
 package client;
 
-import common.Command;
-import lombok.extern.slf4j.Slf4j;
 import client.controllers.Controller;
+import common.Command;
+import common.model.User;
+import lombok.extern.slf4j.Slf4j;
+
 
 import java.io.*;
 import java.net.Socket;
@@ -10,7 +12,8 @@ import java.net.Socket;
 
 @Slf4j
 public class Client {
-    private final int CONNECTION_TIMEOUT = 5;
+    private static Client client;
+    private final int CONNECTION_TIMEOUT = 4;
     private final int SIZE = 8192;
     private final byte[] BUFFER = new byte[SIZE];
     private static String currentPathOnTheServer = "disconnect";
@@ -22,25 +25,38 @@ public class Client {
 
     private String selectedServerFileName;
     private String[] contentCurrentServersDirectory;
-    private final Controller controller;
+    private Controller controller;
     private Socket socket;
     private DataInputStream is;
     private DataOutputStream ous;
 
 
-    public Client(Controller controller) {
-        this.controller = controller;
+    private Client() {
+
         this.currentUserDirectory = CLIENT_ROOT;
     }
 
+    public static Client getInstance() {
+        if (client == null) {
+            client = new Client();
+        }
+        return client;
+    }
+
+    public void setController(Controller controller) {
+        this.controller = controller;
+    }
 
     public void openConnection() throws IOException {
+
         socket = new Socket("localhost", 8189);
         is = new DataInputStream(socket.getInputStream());
         ous = new DataOutputStream(socket.getOutputStream());
 
+
         new Thread(() -> {
             try {
+
                 if (waitConnection()) {
                     readMessage();
                 }
@@ -48,7 +64,7 @@ public class Client {
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
-                System.out.println("Почему то закрылось соединение");
+
                 closeConnection();
             }
         }).start();
@@ -74,7 +90,7 @@ public class Client {
                     controller.displayUsersListView(currentUserDirectory.list());
                 }
 
-                controller.addMessage(message);
+//                controller.addMessage(message);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -118,18 +134,21 @@ public class Client {
         try {
             while (count < CONNECTION_TIMEOUT) {
                 if (is.readUTF().equals(Command.START.getCommand())) {
-                    System.out.println("start");
+                    log.debug("Connection Ok");
                     return true;
                 }
                 Thread.sleep(1000);
                 count++;
             }
+
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
         return false;
     }
+
 
     private void closeConnection() {
 
@@ -268,6 +287,16 @@ public class Client {
         try {
             writeUTF(Command.FOLDER.getCommand());
             writeUTF(folderName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void register(User user) {
+        try {
+            writeUTF(Command.REG.getCommand());
+            new ObjectOutputStream(socket.getOutputStream()).writeObject(user);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
