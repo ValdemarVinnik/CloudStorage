@@ -17,8 +17,8 @@ public class ClientHandler implements Runnable {
     private final int SIZE = 8192;
     private final byte[] BUFFER = new byte[SIZE];
     private final String SERVER_ROOT = "src/main/java/server/root";
-    private String currentPath = SERVER_ROOT;
-    private File currentFile = new File(SERVER_ROOT);
+    private String currentPath;
+    private File currentFile;
     private String[] currentDirectoryContent;
     private File currentDirectory;
 
@@ -31,6 +31,8 @@ public class ClientHandler implements Runnable {
         running = true;
         is = new DataInputStream(socket.getInputStream());
         ous = new DataOutputStream(socket.getOutputStream());
+        currentFile = new File(user.getUser_folder_path());
+        updateCurrentPath();
         currentDirectoryContent = currentFile.list();
         currentDirectory = currentFile;
     }
@@ -178,9 +180,11 @@ public class ClientHandler implements Runnable {
     }
 
     private void goUP() {
-        currentFile = currentFile.getParentFile();
-        updateCurrentDirectory();
-        updateCurrentPath();
+        if (!currentFile.getParentFile().getAbsolutePath().equals(SERVER_ROOT)) {
+            currentFile = currentFile.getParentFile();
+            updateCurrentDirectory();
+            updateCurrentPath();
+        }
     }
 
     private void goDawn() throws IOException {// выбираем файл
@@ -210,7 +214,7 @@ public class ClientHandler implements Runnable {
 
     private void sendCurrentLocation() throws IOException {
         ous.writeUTF(Command.LOCATION.getCommand());
-        ous.writeUTF(currentFile.getAbsolutePath());
+        ous.writeUTF(currentFile.getAbsolutePath().replace(SERVER_ROOT, ""));
 
     }
 

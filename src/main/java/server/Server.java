@@ -6,10 +6,7 @@ import common.model.User;
 import lombok.extern.slf4j.Slf4j;
 import server.db.DBConnection;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -34,10 +31,10 @@ public class Server {
         while (true) {
             try {
                 this.socket = server.accept();
-                log.info("Server started...");
+                log.info("Server connect...");
                 is = new DataInputStream(socket.getInputStream());
                 ous = new DataOutputStream(socket.getOutputStream());
-                ois = new ObjectInputStream(socket.getInputStream());
+                //ois = new ObjectInputStream(socket.getInputStream());
 
                 ous.writeUTF(Command.START.getCommand());
 
@@ -55,10 +52,12 @@ public class Server {
             String massage = is.readUTF();
 
             if(massage.equals(Command.REG.getCommand())){
+                ois = new ObjectInputStream(socket.getInputStream());
                 User user = (User)ois.readObject();
-                if(dbConnection.getUserByLogin(user.getLogin()) == null){
+                    dbConnection.registerUser(user);
+                    createNewUsersFolder(user);
                     startNewClientHandler(user);
-                }
+
             }
 
             if(massage.equals(Command.AUTH.getCommand())){
@@ -71,11 +70,21 @@ public class Server {
         }
     }
 
+    private boolean createNewUsersFolder(User user) {
+        String user_folder_path = user.getUser_folder_path();
+        if (user_folder_path == null){
+            return false;
+        }
+
+        File file = new File(user_folder_path);
+        return file.mkdir();
+    }
+
     private void startNewClientHandler(User user) throws IOException {
         Thread thread = new Thread(new ClientHandler(socket, user));
         thread.setDaemon(true);
         thread.start();
     }
 
-    ;
+
 }

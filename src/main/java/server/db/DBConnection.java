@@ -14,6 +14,7 @@ public class DBConnection {
     private String dbUser = "root";
     private String dbPass = "314159";
     private String dbName = "cloud_store";
+    private final String SERVER_ROOT = "src/main/java/server/root/";
 
     private Connection connection;
     private Statement statement;
@@ -56,9 +57,9 @@ public class DBConnection {
 
         try {
             ResultSet resultSet = getStatement().executeQuery(request);
-            resultSet.next();
 
-            if (resultSet == null) {
+
+            if (!resultSet.next()) {
                 return null;
             }
             String name = resultSet.getString("name");
@@ -72,13 +73,24 @@ public class DBConnection {
         return null;
     }
 
-    public boolean registerUser(User user) {
+    public User registerUser(User user) {
         String login = user.getLogin();
-        return (getUserByLogin(login) == null);
-        /**
-         * докрутить создание записи в таблице
-         */
 
+        if (getUserByLogin(login) == null) {
+            String name = user.getName();
+            String password = user.getPassword();
+            String user_folder_path = SERVER_ROOT + login;
+            user.setUser_folder_path(user_folder_path);
+
+            String request = Request.createNewUser(name, login, password, user_folder_path);
+            try {
+                int rowInsert = getStatement().executeUpdate(request);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        }
+        return user;
     }
 
 
@@ -102,4 +114,25 @@ public class DBConnection {
         }
         return null;
     }
+
+//    public User getUserFolderPathByLoginAndPassword(User user) {
+//        String request = Request.selectUserFolderPath(user.getLogin(), user.getPassword());
+//
+//        try {
+//            ResultSet resultSet = getStatement().executeQuery(request);
+//            resultSet.next();
+//
+//            if (resultSet == null) {
+//                return null;
+//            }
+//
+//            String user_folder_path = resultSet.getString("user_folder_path");
+//            user.setUser_folder_path();
+//            return user;
+//
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
 }

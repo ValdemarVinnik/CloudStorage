@@ -8,6 +8,14 @@ public class User implements Serializable {
     private String password;
     private String user_folder_path;
 
+    public String getUser_folder_path() {
+        return user_folder_path;
+    }
+
+    public void setUser_folder_path(String user_folder_path) {
+        this.user_folder_path = user_folder_path;
+    }
+
     public String getLogin() {
         return login;
     }
