@@ -14,6 +14,7 @@ public class ClientHandler implements Runnable {
     private Socket socket;
     private DataInputStream is;
     private DataOutputStream ous;
+    private DBConnection dbConnection;
     private final int SIZE = 8192;
     private final byte[] BUFFER = new byte[SIZE];
     private final String SERVER_ROOT = "src/main/java/server/root";
@@ -24,17 +25,61 @@ public class ClientHandler implements Runnable {
 
     private boolean running = false;
 
-    public ClientHandler(Socket socket, User user) throws IOException {
-
-        this.user = user;
+    public ClientHandler(Socket socket) throws IOException {
+        dbConnection = DBConnection.getInstance();
+        // this.user = user;
         this.socket = socket;
         running = true;
         is = new DataInputStream(socket.getInputStream());
         ous = new DataOutputStream(socket.getOutputStream());
-        currentFile = new File(user.getUser_folder_path());
+        // ous.writeUTF(Command.START.getCommand());
+        // ois = new ObjectInputStream(socket.getInputStream());
+        identifyUser();
+        //currentFile = new File(user.getUser_folder_path());
         updateCurrentPath();
         currentDirectoryContent = currentFile.list();
         currentDirectory = currentFile;
+    }
+
+    private void identifyUser() throws IOException {
+        try {
+
+
+            //ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+
+            String massage = is.readUTF();
+
+            if (massage.equals(Command.REG.getCommand())) {
+                ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                this.user = (User) ois.readObject();
+                dbConnection.registerUser(user);
+                createNewUsersFolder(user);
+                // ous. error
+
+            }
+
+            if (massage.equals(Command.AUTH.getCommand())) {
+                // ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                // User user = (User) ois.readObject();
+//                if (dbConnection.getUserByLoginAndPassword(user.getLogin(), user.getPassword()) == null) {
+//                    // startNewClientHandler(user);
+//                }
+
+            }
+
+        } catch (IOException | ClassNotFoundException e) {
+            log.error(e.toString());
+        }
+    }
+
+    private boolean createNewUsersFolder(User user) {
+        String user_folder_path = dbConnection.getUserByLoginAndPassword(user);
+        if (user_folder_path == null) {
+            return false;
+        }
+
+        currentFile = new File(user_folder_path);
+        return currentFile.mkdir();
     }
 
     private void stopHandler() {
@@ -44,7 +89,9 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
 
+
         try {
+            ous.writeUTF(Command.START.getCommand());
             ous.writeUTF("Open connection...");
             sendCurrentLocation();
             sendCurrentDirectoryContent();
@@ -52,6 +99,7 @@ public class ClientHandler implements Runnable {
             while (running) {
                 String clientMessage = is.readUTF();
                 log.debug("Command is : " + clientMessage);
+
                 if (clientMessage.equals(Command.SEND.getCommand())) {
                     readFile();
                     updateCurrentDirectory();
@@ -113,9 +161,9 @@ public class ClientHandler implements Runnable {
 
     private void registerUser() throws IOException {
         try {
-            User user = (User)new ObjectInputStream(socket.getInputStream()).readObject();
+            User user = (User) new ObjectInputStream(socket.getInputStream()).readObject();
 
-        }catch (ClassNotFoundException e){
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -124,7 +172,7 @@ public class ClientHandler implements Runnable {
         String newFolderName = is.readUTF();
         File file = new File(currentPath + "/" + newFolderName);
         file.mkdir();
-        log.debug("file " +newFolderName +" is directory " + file.isDirectory());
+        log.debug("file " + newFolderName + " is directory " + file.isDirectory());
     }
 
     private void deleteFile() throws IOException {

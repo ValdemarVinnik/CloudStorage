@@ -18,6 +18,18 @@ public class DBConnection {
 
     private Connection connection;
     private Statement statement;
+    private static DBConnection dbConnection;
+
+    private DBConnection() {
+
+    }
+
+    public static DBConnection getInstance() {
+        if (dbConnection == null) {
+            dbConnection = new DBConnection();
+        }
+        return dbConnection;
+    }
 
     private Connection getConnection() {
         String connectionString = db + dbHost + ":" + dbPort + "/" + dbName;
@@ -57,11 +69,13 @@ public class DBConnection {
 
         try {
             ResultSet resultSet = getStatement().executeQuery(request);
+            resultSet.next();
 
-
-            if (!resultSet.next()) {
+            if (resultSet.getRow() == 0) {
                 return null;
             }
+
+
             String name = resultSet.getString("name");
             String password = resultSet.getString("password");
             String user_folder_path = resultSet.getString("user_folder_path");
@@ -94,20 +108,20 @@ public class DBConnection {
     }
 
 
-    public User getUserByLoginAndPassword(String login, String password) {
-        String request = Request.selectByLoginAndPassword(login, password);
+    public String getUserByLoginAndPassword(User user) {
+        String request = Request.selectByLoginAndPassword(user.getLogin(), user.getPassword());
 
         try {
             ResultSet resultSet = getStatement().executeQuery(request);
             resultSet.next();
 
-            if (resultSet == null) {
+            if (resultSet.getRow() == 0) {
                 return null;
             }
-            String name = resultSet.getString("name");
+           // String name = resultSet.getString("name");
             //String password = resultSet.getString("password");
             String user_folder_path = resultSet.getString("user_folder_path");
-            return new User(name, login, password, user_folder_path);
+            return user_folder_path;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -115,24 +129,5 @@ public class DBConnection {
         return null;
     }
 
-//    public User getUserFolderPathByLoginAndPassword(User user) {
-//        String request = Request.selectUserFolderPath(user.getLogin(), user.getPassword());
-//
-//        try {
-//            ResultSet resultSet = getStatement().executeQuery(request);
-//            resultSet.next();
-//
-//            if (resultSet == null) {
-//                return null;
-//            }
-//
-//            String user_folder_path = resultSet.getString("user_folder_path");
-//            user.setUser_folder_path();
-//            return user;
-//
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//        return null;
-//    }
+
 }

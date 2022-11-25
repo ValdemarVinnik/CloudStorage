@@ -76,6 +76,7 @@ public class Client {
         try {
             while (true) {
                 message = is.readUTF();
+                log.debug(message);
 
                 if (message.equals(Command.LOCATION.getCommand())) {
                     acceptLocation();
@@ -112,6 +113,7 @@ public class Client {
 
     private void acceptLocation() throws IOException {
         currentPathOnTheServer = is.readUTF();
+        log.debug(currentPathOnTheServer);
 
         controller.displayServerCurrentPath(currentPathOnTheServer);// как то криво
     }

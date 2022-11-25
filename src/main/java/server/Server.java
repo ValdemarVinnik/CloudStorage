@@ -17,10 +17,10 @@ public class Server {
     private DataInputStream is;
     private DataOutputStream ous;
     private ObjectInputStream ois;
-    private DBConnection dbConnection;
+    //private DBConnection dbConnection;
 
     public Server() {
-        dbConnection = new DBConnection();
+
     }
 
     public void run() throws IOException {
@@ -32,47 +32,52 @@ public class Server {
             try {
                 this.socket = server.accept();
                 log.info("Server connect...");
-                is = new DataInputStream(socket.getInputStream());
-                ous = new DataOutputStream(socket.getOutputStream());
+                //is = new DataInputStream(socket.getInputStream());
+                //ous = new DataOutputStream(socket.getOutputStream());
                 //ois = new ObjectInputStream(socket.getInputStream());
 
-                ous.writeUTF(Command.START.getCommand());
+                //ous.writeUTF(Command.START.getCommand());
 
-                readLoginCommands();
+               // readLoginCommands();
+                Thread thread = new Thread(new ClientHandler(socket));
+                thread.setDaemon(true);
+                thread.start();
 
 
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (IOException  e) {
                 e.printStackTrace();
             }
         }
     }
 
-    void readLoginCommands() throws IOException, ClassNotFoundException {
-        while (true){
-            String massage = is.readUTF();
-
-            if(massage.equals(Command.REG.getCommand())){
-                ois = new ObjectInputStream(socket.getInputStream());
-                User user = (User)ois.readObject();
-                    dbConnection.registerUser(user);
-                    createNewUsersFolder(user);
-                    startNewClientHandler(user);
-
-            }
-
-            if(massage.equals(Command.AUTH.getCommand())){
-                User user = (User)ois.readObject();
-                if(dbConnection.getUserByLoginAndPassword(user.getLogin(), user.getPassword()) == null){
-                    startNewClientHandler(user);
-                }
-
-            }
-        }
-    }
+//    void readLoginCommands() throws IOException, ClassNotFoundException {
+//        while (true) {
+//            String massage = is.readUTF();
+//
+//            if (massage.equals(Command.REG.getCommand())) {
+//                ois = new ObjectInputStream(socket.getInputStream());
+//                User user = (User) ois.readObject();
+//                dbConnection.registerUser(user);
+//                    createNewUsersFolder(user);
+//                    startNewClientHandler(user);
+//
+//                    // ous. error
+//
+//            }
+//
+//            if (massage.equals(Command.AUTH.getCommand())) {
+//                User user = (User) ois.readObject();
+//                if (dbConnection.getUserByLoginAndPassword(user.getLogin(), user.getPassword()) == null) {
+//                    startNewClientHandler(user);
+//                }
+//
+//            }
+//        }
+//    }
 
     private boolean createNewUsersFolder(User user) {
         String user_folder_path = user.getUser_folder_path();
-        if (user_folder_path == null){
+        if (user_folder_path == null) {
             return false;
         }
 
@@ -80,11 +85,11 @@ public class Server {
         return file.mkdir();
     }
 
-    private void startNewClientHandler(User user) throws IOException {
-        Thread thread = new Thread(new ClientHandler(socket, user));
-        thread.setDaemon(true);
-        thread.start();
-    }
+//    private void startNewClientHandler(User user) throws IOException {
+//        Thread thread = new Thread(new ClientHandler(socket, user));
+//        thread.setDaemon(true);
+//        thread.start();
+//    }
 
 
 }
