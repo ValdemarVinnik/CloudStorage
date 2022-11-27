@@ -3,11 +3,22 @@ package client;
 import client.controllers.Controller;
 import common.Command;
 import common.model.User;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
+import java.net.URL;
+import java.util.Optional;
 
 
 @Slf4j
@@ -49,7 +60,9 @@ public class Client {
 
     public void openConnection() throws IOException {
 
+
         socket = new Socket("localhost", 8189);
+
         is = new DataInputStream(socket.getInputStream());
         ous = new DataOutputStream(socket.getOutputStream());
 
@@ -86,9 +99,17 @@ public class Client {
                     acceptDirContent();
                 }
 
+                if (message.equals(Command.ERROR.getCommand())) {
+                    displayError();
+                }
+
                 if (message.equals(Command.SEND.getCommand())) {
                     readFile();
                     controller.displayUsersListView(currentUserDirectory.list());
+                }
+
+                if (message.equals(Command.END.getCommand())) {
+                    returnAuthWindow();
                 }
 
 //                controller.addMessage(message);
@@ -96,6 +117,42 @@ public class Client {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+    }
+
+    private void displayError() throws IOException {
+        String error = is.readUTF();
+
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR,
+                    error,
+                    new ButtonType("Try again", ButtonBar.ButtonData.OK_DONE),
+                    new ButtonType("Exit", ButtonBar.ButtonData.CANCEL_CLOSE));
+
+            alert.setTitle("ERROR");
+            final Optional<ButtonType> answer = alert.showAndWait();
+            final boolean isExist = answer.map(select -> select.getButtonData().isCancelButton()).orElse(false);
+            if (isExist) {
+                System.exit(0);
+            } else {
+                returnAuthWindow();
+            }
+        });
+
+
+    }
+
+    private void returnAuthWindow() {
+        controller.getWindow().hide();
+        URL fxmlLocation = getClass().getResource("/fxml/auth.fxml");
+        FXMLLoader fxmlLoader = new FXMLLoader(fxmlLocation);
+        Stage primaryStage = new Stage();
+        try {
+            primaryStage.setScene(new Scene((Parent) fxmlLoader.load()));
+        } catch (IOException e) {
+            log.error(e.toString());
+        }
+        primaryStage.show();
 
     }
 
@@ -153,7 +210,11 @@ public class Client {
 
 
     private void closeConnection() {
-
+        try {
+            writeUTF(Command.END.getCommand());
+        } catch (IOException e) {
+            log.error(e.toString());
+        }
         if (is != null) {
             try {
                 is.close();
@@ -200,7 +261,7 @@ public class Client {
 
     private void readFile() throws IOException {
         log.debug("readFile");
-        String fileName = is.readUTF(); // нужно будет добавить поп-ап окно с предупреждениеи, если такой файл существует
+        String fileName = is.readUTF();
         File file = new File(currentUserDirectory.getAbsolutePath() + "/" + fileName);
         long size = is.readLong();
 
@@ -297,6 +358,16 @@ public class Client {
     public void register(User user) {
         try {
             writeUTF(Command.REG.getCommand());
+            new ObjectOutputStream(socket.getOutputStream()).writeObject(user);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void authenticate(User user) {
+        try {
+            writeUTF(Command.AUTH.getCommand());
             new ObjectOutputStream(socket.getOutputStream()).writeObject(user);
 
         } catch (IOException e) {

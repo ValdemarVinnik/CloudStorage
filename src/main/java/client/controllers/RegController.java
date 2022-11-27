@@ -9,6 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -81,6 +82,11 @@ public class RegController implements Controller {
         if (isExist) {
             System.exit(0);
         }
+    }
+
+    @Override
+    public Window getWindow() {
+        return nameField.getScene().getWindow();
     }
 
     @Override

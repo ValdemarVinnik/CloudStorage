@@ -108,7 +108,7 @@ public class DBConnection {
     }
 
 
-    public String getUserByLoginAndPassword(User user) {
+    public User getUserByLoginAndPassword(User user) {
         String request = Request.selectByLoginAndPassword(user.getLogin(), user.getPassword());
 
         try {
@@ -118,10 +118,12 @@ public class DBConnection {
             if (resultSet.getRow() == 0) {
                 return null;
             }
-           // String name = resultSet.getString("name");
-            //String password = resultSet.getString("password");
+
+            String name = resultSet.getString("name");
+            String login = resultSet.getString("login");
+            String password = resultSet.getString("password");
             String user_folder_path = resultSet.getString("user_folder_path");
-            return user_folder_path;
+            return new User(name, login, password, user_folder_path);
 
         } catch (SQLException e) {
             e.printStackTrace();

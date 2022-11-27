@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.MouseButton;
+import javafx.stage.Window;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -156,6 +157,11 @@ public class ClientController implements Controller{
     public void addMessage(String message) {
         logArea.appendText(message + "\n");
 
+    }
+
+    @Override
+    public Window getWindow() {
+        return userViewListField.getScene().getWindow();
     }
 
     public void displayUsersListView(String... files) {

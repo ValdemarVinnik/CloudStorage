@@ -1,6 +1,11 @@
 package client.controllers;
 
+
+import javafx.stage.Window;
+
 public interface Controller {
+
+     Window getWindow();
 
     void displayUsersListView(String... files);
 

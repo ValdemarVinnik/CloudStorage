@@ -13,6 +13,7 @@ public enum Command {
     FOLDER("#folder"),
     REG("#reg"),
     AUTH("#auth"),
+    ERROR("#error"),
     LOCATION("#location");
 
     private final String command;

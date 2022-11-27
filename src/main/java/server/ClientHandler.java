@@ -27,25 +27,20 @@ public class ClientHandler implements Runnable {
 
     public ClientHandler(Socket socket) throws IOException {
         dbConnection = DBConnection.getInstance();
-        // this.user = user;
         this.socket = socket;
-        running = true;
         is = new DataInputStream(socket.getInputStream());
         ous = new DataOutputStream(socket.getOutputStream());
-        // ous.writeUTF(Command.START.getCommand());
-        // ois = new ObjectInputStream(socket.getInputStream());
-        identifyUser();
-        //currentFile = new File(user.getUser_folder_path());
-        updateCurrentPath();
-        currentDirectoryContent = currentFile.list();
-        currentDirectory = currentFile;
+        ous.writeUTF(Command.START.getCommand());
+        if (identifyUser()) {
+            running = true;
+            updateCurrentPath();
+            currentDirectoryContent = currentFile.list();
+            currentDirectory = currentFile;
+        }
     }
 
-    private void identifyUser() throws IOException {
+    private boolean identifyUser() throws IOException {
         try {
-
-
-            //ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 
             String massage = is.readUTF();
 
@@ -53,32 +48,37 @@ public class ClientHandler implements Runnable {
                 ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                 this.user = (User) ois.readObject();
                 dbConnection.registerUser(user);
-                createNewUsersFolder(user);
-                // ous. error
-
+                if (!createNewUsersFolder(user)) {
+                    sendError(String.format("user with login %s already exists", user.getLogin()));
+                    stopHandler();
+                    return false;
+                }
+                return true;
             }
 
             if (massage.equals(Command.AUTH.getCommand())) {
-                // ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-                // User user = (User) ois.readObject();
-//                if (dbConnection.getUserByLoginAndPassword(user.getLogin(), user.getPassword()) == null) {
-//                    // startNewClientHandler(user);
-//                }
-
+                ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                User user = (User) ois.readObject();
+                if (dbConnection.getUserByLoginAndPassword(user) == null) {
+                    sendError(String.format("not found user %s", user.getLogin()));
+                    stopHandler();
+                    return false;
+                }
+                return true;
             }
 
         } catch (IOException | ClassNotFoundException e) {
             log.error(e.toString());
         }
+        return false;
     }
 
     private boolean createNewUsersFolder(User user) {
-        String user_folder_path = dbConnection.getUserByLoginAndPassword(user);
-        if (user_folder_path == null) {
+        User authUser = dbConnection.getUserByLoginAndPassword(user);
+        if (authUser == null) {
             return false;
         }
-
-        currentFile = new File(user_folder_path);
+        currentFile = new File(user.getUser_folder_path());
         return currentFile.mkdir();
     }
 
@@ -91,10 +91,11 @@ public class ClientHandler implements Runnable {
 
 
         try {
-            ous.writeUTF(Command.START.getCommand());
-            ous.writeUTF("Open connection...");
-            sendCurrentLocation();
-            sendCurrentDirectoryContent();
+
+            if (running) {
+                sendCurrentLocation();
+                sendCurrentDirectoryContent();
+            }
 
             while (running) {
                 String clientMessage = is.readUTF();
@@ -147,9 +148,8 @@ public class ClientHandler implements Runnable {
                 }
 
 
-                if (clientMessage.equals("end")) {
+                if (clientMessage.equals(Command.END.getCommand())) {
                     stopHandler();
-                    ous.writeUTF("server disconnected.");
                     break;
                 }
             }
@@ -159,20 +159,16 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void registerUser() throws IOException {
-        try {
-            User user = (User) new ObjectInputStream(socket.getInputStream()).readObject();
-
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void createFolder() throws IOException {
         String newFolderName = is.readUTF();
         File file = new File(currentPath + "/" + newFolderName);
         file.mkdir();
         log.debug("file " + newFolderName + " is directory " + file.isDirectory());
+    }
+
+    private void sendError(String error) throws IOException {
+        writeUTF(Command.ERROR.getCommand());
+        writeUTF(error);
     }
 
     private void deleteFile() throws IOException {
