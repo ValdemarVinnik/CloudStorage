@@ -1,31 +1,35 @@
 package server;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import common.Command;
+import common.Command.*;
+import common.model.User;
+import lombok.extern.slf4j.Slf4j;
+import server.db.DBConnection;
+
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+
+@Slf4j
 public class Server {
     private Socket socket;
-    private DataInputStream is;
-    private DataOutputStream ous;
 
-   public void run() throws IOException {
+    public void run() throws IOException {
 
         ServerSocket server = new ServerSocket(8189);
-        System.out.println("Server started...");
+        log.info("Server started...");
 
-        while (true){
+        while (true) {
             try {
                 this.socket = server.accept();
-                System.out.println("Server connected with client...");
-                is = new DataInputStream(socket.getInputStream());
-                ous = new DataOutputStream(socket.getOutputStream());
-                ous.writeUTF("start");
+                log.info("Server connect...");
 
-                new Thread(new ClientHandler(socket)).start();
-            }catch(Exception e){
+                Thread thread = new Thread(new ClientHandler(socket));
+                thread.setDaemon(true);
+                thread.start();
+
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
