@@ -41,7 +41,6 @@ public class DBConnection {
                 e.printStackTrace();
             }
         }
-
         return connection;
     }
 
@@ -75,7 +74,6 @@ public class DBConnection {
                 return null;
             }
 
-
             String name = resultSet.getString("name");
             String password = resultSet.getString("password");
             String user_folder_path = resultSet.getString("user_folder_path");
@@ -102,7 +100,6 @@ public class DBConnection {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-
         }
         return user;
     }

@@ -74,12 +74,13 @@ public class ClientController implements Controller{
         displayUserCurrentPath(client.getCurrentPath());
         viewSelectedUserFile();
         viewSelectedServerFile();
+        createServersContextMenu();
     }
 
     public ClientController() {
         this.client = Client.getInstance();
         client.setController(this);
-        createServersContextMenu();
+
     }
 
     private void createServersContextMenu() {
@@ -154,11 +155,6 @@ public class ClientController implements Controller{
         this.menu = new ContextMenu(rename, delete, createFolder);
     }
 
-    public void addMessage(String message) {
-        logArea.appendText(message + "\n");
-
-    }
-
     @Override
     public Window getWindow() {
         return userViewListField.getScene().getWindow();
@@ -195,7 +191,7 @@ public class ClientController implements Controller{
                 String selectedFileName = userViewListField.getSelectionModel().getSelectedItem();
                 client.GoDown(selectedFileName);
                 client.createSelectedFile();
-                addMessage("Selected " + client.getSelectedUserFile().getName());
+
                 if (client.getSelectedUserFile().isDirectory()) {
                     displayUsersListView(client.getSelectedUserFile().list());
                 }
@@ -240,24 +236,8 @@ public class ClientController implements Controller{
             client.openConnection();
         } catch (IOException e) {
             e.printStackTrace();
-           // showNotification();
         }
     }
-
-//    private void showNotification() {
-//        final Alert alert = new Alert(Alert.AlertType.ERROR,
-//                "I can't connect to the server.",
-//                new ButtonType("Try again", ButtonBar.ButtonData.OK_DONE),
-//                new ButtonType("Exit", ButtonBar.ButtonData.CANCEL_CLOSE));
-//
-//        alert.setTitle("Connection error!");
-//        final Optional<ButtonType> answer = alert.showAndWait();
-//        final boolean isExist = answer.map(select -> select.getButtonData().isCancelButton()).orElse(false);
-//        if (isExist) {
-//            System.exit(0);
-//        }
-//    }
-
 
     public void downloadFile(ActionEvent actionEvent) {
         try {

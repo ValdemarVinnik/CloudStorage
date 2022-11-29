@@ -17,7 +17,8 @@ public class ClientHandler implements Runnable {
     private DBConnection dbConnection;
     private final int SIZE = 8192;
     private final byte[] BUFFER = new byte[SIZE];
-    private final String SERVER_ROOT = "src/main/java/server/root";
+    private final String SERVER_ROOT_PATH = "src/main/java/server/root";
+    private final File SERVER;
     private String currentPath;
     private File currentFile;
     private String[] currentDirectoryContent;
@@ -26,6 +27,7 @@ public class ClientHandler implements Runnable {
     private boolean running = false;
 
     public ClientHandler(Socket socket) throws IOException {
+        SERVER = new File(SERVER_ROOT_PATH);
         dbConnection = DBConnection.getInstance();
         this.socket = socket;
         is = new DataInputStream(socket.getInputStream());
@@ -58,12 +60,14 @@ public class ClientHandler implements Runnable {
 
             if (massage.equals(Command.AUTH.getCommand())) {
                 ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-                User user = (User) ois.readObject();
-                if (dbConnection.getUserByLoginAndPassword(user) == null) {
-                    sendError(String.format("not found user %s", user.getLogin()));
+                User rawUser = (User) ois.readObject();
+                this.user = dbConnection.getUserByLoginAndPassword(rawUser);
+                if (user == null) {
+                    sendError(String.format("not found user %s with password %s", rawUser.getLogin(), rawUser.getPassword()));
                     stopHandler();
                     return false;
                 }
+                currentFile = new File(user.getUser_folder_path());
                 return true;
             }
 
@@ -130,7 +134,6 @@ public class ClientHandler implements Runnable {
                     sendCurrentDirectoryContent();
                 }
 
-
                 if (clientMessage.equals(Command.DELETE.getCommand())) {
                     deleteFile();
                     updateCurrentPath();
@@ -147,9 +150,9 @@ public class ClientHandler implements Runnable {
                     sendCurrentDirectoryContent();
                 }
 
-
                 if (clientMessage.equals(Command.END.getCommand())) {
                     stopHandler();
+                    writeUTF(Command.END.getCommand());
                     break;
                 }
             }
@@ -224,7 +227,8 @@ public class ClientHandler implements Runnable {
     }
 
     private void goUP() {
-        if (!currentFile.getParentFile().getAbsolutePath().equals(SERVER_ROOT)) {
+        String parentFileName = currentFile.getParentFile().getAbsolutePath();
+        if (!parentFileName.equals(SERVER.getAbsolutePath())) {
             currentFile = currentFile.getParentFile();
             updateCurrentDirectory();
             updateCurrentPath();
@@ -258,7 +262,8 @@ public class ClientHandler implements Runnable {
 
     private void sendCurrentLocation() throws IOException {
         ous.writeUTF(Command.LOCATION.getCommand());
-        ous.writeUTF(currentFile.getAbsolutePath().replace(SERVER_ROOT, ""));
+        String location = currentFile.getAbsolutePath().replace(SERVER.getAbsolutePath(), "");
+        ous.writeUTF(location);
 
     }
 

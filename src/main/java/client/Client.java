@@ -109,10 +109,10 @@ public class Client {
                 }
 
                 if (message.equals(Command.END.getCommand())) {
-                    returnAuthWindow();
+                    closeConnection();
                 }
 
-//                controller.addMessage(message);
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -138,8 +138,6 @@ public class Client {
                 returnAuthWindow();
             }
         });
-
-
     }
 
     private void returnAuthWindow() {
@@ -166,6 +164,14 @@ public class Client {
             return new String[]{"???"};
         }
         return contentCurrentServersDirectory;
+    }
+
+    public void sendMessage(Command command) {
+        try {
+            writeUTF(command.getCommand());
+        } catch (IOException e) {
+            log.debug(e.toString());
+        }
     }
 
     private void acceptLocation() throws IOException {

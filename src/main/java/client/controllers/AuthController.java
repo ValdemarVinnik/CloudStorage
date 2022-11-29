@@ -1,6 +1,7 @@
 package client.controllers;
 
 import client.Client;
+import common.Command;
 import common.model.User;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -57,6 +58,7 @@ public class AuthController implements Controller{
         Stage primaryStage = new Stage();
        try{
            primaryStage.setScene(new Scene((Parent) fxmlLoader.load()));
+           primaryStage.setOnCloseRequest(event -> client.sendMessage(Command.END));
        }catch (IOException e){
            log.error(e.toString());
        }
@@ -99,6 +101,7 @@ public class AuthController implements Controller{
         Stage primaryStage = new Stage();
         try{
             primaryStage.setScene(new Scene((Parent) fxmlLoader.load()));
+            primaryStage.setOnCloseRequest(event -> System.exit(0));
         }catch (IOException e){
             log.error(e.toString());
         }

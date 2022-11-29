@@ -1,6 +1,8 @@
 package client;
 
 
+import client.controllers.Controller;
+import common.Command;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -17,8 +19,8 @@ public class CloudStorageStarter extends Application {
         primaryStage.setScene(new Scene((Parent) fxmlLoader.load()));
         primaryStage.show();
 
-       // Controller controller = fxmlLoader.getController();
-        // primaryStage.setOnCloseRequest(event -> controller.getClient().sendMessage(Command.END));
+        Controller controller = fxmlLoader.getController();
+        primaryStage.setOnCloseRequest(event -> System.exit(0));
     }
 
 
